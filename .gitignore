@@ -1,0 +1,38 @@
+node_modules
+dist
+out
+.DS_Store
+
+# 환경변수
+.env
+.env.local
+.env.*.local
+
+# 로그
+*.log
+npm-debug.log*
+
+# 에디터
+.vscode/
+.idea/
+*.suo
+*.swp
+*.swo
+
+# TypeScript 빌드 캐시
+*.tsbuildinfo
+
+# Vite 캐시
+.vite/
+
+# electron-builder 캐시
+electron-builder-cache/
+
+# 빌드 캐시 (electron 바이너리 등 대용량 파일 포함)
+.cache/
+
+# 로컬 DB (개발 중 생성되는 SQLite 파일)
+*.db
+*.db-shm
+*.db-wal
+

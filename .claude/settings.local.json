@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(pkill -f \"electron\")",
+      "Bash(pkill -f \"vite\")",
+      "Bash(kill -9 13907 13982 13983)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Read(//tmp/**)",
+      "Bash(node *)",
+      "Bash(./node_modules/.bin/electron test-runner.js)",
+      "Read(//private/tmp/**)",
+      "Bash(git reset *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)"
+    ]
+  }
+}
