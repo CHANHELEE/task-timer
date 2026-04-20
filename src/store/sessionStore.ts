@@ -7,6 +7,7 @@ interface SessionState {
   dailyStats: DailyStat[]
   weeklyStats: WeeklyStat[]
   weeklySubjectStats: WeeklySubjectStat[]
+  monthlyStats: DailyStat[]
   goals: GoalRow[]
 
   setSubjects: (subjects: SubjectRow[]) => void
@@ -18,6 +19,7 @@ interface SessionState {
   setDailyStats: (stats: DailyStat[]) => void
   setWeeklyStats: (stats: WeeklyStat[]) => void
   setWeeklySubjectStats: (stats: WeeklySubjectStat[]) => void
+  setMonthlyStats: (stats: DailyStat[]) => void
   setGoals: (goals: GoalRow[]) => void
 }
 
@@ -27,6 +29,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   dailyStats: [],
   weeklyStats: [],
   weeklySubjectStats: [],
+  monthlyStats: [],
   goals: [],
 
   setSubjects: (subjects) => set({ subjects }),
@@ -42,5 +45,6 @@ export const useSessionStore = create<SessionState>((set) => ({
   setDailyStats: (dailyStats) => set({ dailyStats }),
   setWeeklyStats: (weeklyStats) => set({ weeklyStats }),
   setWeeklySubjectStats: (weeklySubjectStats) => set({ weeklySubjectStats }),
+  setMonthlyStats: (monthlyStats) => set({ monthlyStats }),
   setGoals: (goals) => set({ goals })
 }))

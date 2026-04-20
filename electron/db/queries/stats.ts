@@ -36,25 +36,41 @@ export function getDailyStats(date: string): DailyStat[] {
     .all(date) as DailyStat[]
 }
 
-export function getWeeklyStats(year: number, week: number): WeeklyStat[] {
+export function getWeeklyStats(weekStart: string): WeeklyStat[] {
   const db = getDb()
-  // SQLite: strftime('%W') returns week number (00-53, Sun start)
-  // We use %W and filter by year
   return db
     .prepare(
       `SELECT DATE(started_at, 'unixepoch', 'localtime') AS date,
               SUM(actual_seconds) AS total_seconds
        FROM sessions
-       WHERE strftime('%Y', started_at, 'unixepoch', 'localtime') = ?
-         AND strftime('%W', started_at, 'unixepoch', 'localtime') = ?
+       WHERE DATE(started_at, 'unixepoch', 'localtime') >= ?
+         AND DATE(started_at, 'unixepoch', 'localtime') < DATE(?, '+7 days')
          AND actual_seconds IS NOT NULL
        GROUP BY date
        ORDER BY date`
     )
-    .all(String(year), String(week).padStart(2, '0')) as WeeklyStat[]
+    .all(weekStart, weekStart) as WeeklyStat[]
 }
 
-export function getWeeklyStatsBySubject(year: number, week: number): WeeklySubjectStat[] {
+export function getWeeklyStatsBySubject(weekStart: string): WeeklySubjectStat[] {
+  const db = getDb()
+  return db
+    .prepare(
+      `SELECT s.subject_id,
+              sub.name  AS subject_name,
+              sub.color AS subject_color,
+              SUM(s.actual_seconds) AS total_seconds
+       FROM sessions s
+       JOIN subjects sub ON sub.id = s.subject_id
+       WHERE DATE(s.started_at, 'unixepoch', 'localtime') >= ?
+         AND DATE(s.started_at, 'unixepoch', 'localtime') < DATE(?, '+7 days')
+         AND s.actual_seconds IS NOT NULL
+       GROUP BY s.subject_id`
+    )
+    .all(weekStart, weekStart) as WeeklySubjectStat[]
+}
+
+export function getMonthlyStats(year: number, month: number): DailyStat[] {
   const db = getDb()
   return db
     .prepare(
@@ -65,9 +81,10 @@ export function getWeeklyStatsBySubject(year: number, week: number): WeeklySubje
        FROM sessions s
        JOIN subjects sub ON sub.id = s.subject_id
        WHERE strftime('%Y', s.started_at, 'unixepoch', 'localtime') = ?
-         AND strftime('%W', s.started_at, 'unixepoch', 'localtime') = ?
+         AND strftime('%m', s.started_at, 'unixepoch', 'localtime') = ?
          AND s.actual_seconds IS NOT NULL
-       GROUP BY s.subject_id`
+       GROUP BY s.subject_id
+       ORDER BY sub.created_at`
     )
-    .all(String(year), String(week).padStart(2, '0')) as WeeklySubjectStat[]
+    .all(String(year), String(month).padStart(2, '0')) as DailyStat[]
 }

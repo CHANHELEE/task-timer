@@ -4,14 +4,14 @@ import { useSession } from '../../hooks/useSession'
 import { useSessionStore } from '../../store/sessionStore'
 import type { SubjectRow } from '../../types/electron'
 
-function getDailyPct(
+function getAllTimePct(
   subjectId: number,
-  dailyStats: ReturnType<typeof useSessionStore.getState>['dailyStats'],
+  monthlyStats: ReturnType<typeof useSessionStore.getState>['monthlyStats'],
   goals: ReturnType<typeof useSessionStore.getState>['goals']
 ): number | null {
   const goal = goals.find((g) => g.subject_id === subjectId)
   if (!goal?.daily_seconds) return null
-  const actual = dailyStats.find((s) => s.subject_id === subjectId)?.total_seconds ?? 0
+  const actual = monthlyStats.find((s) => s.subject_id === subjectId)?.total_seconds ?? 0
   return Math.min(Math.floor((actual / goal.daily_seconds) * 100), 100)
 }
 
@@ -59,14 +59,19 @@ function SubjectCard({ subject, pct, selected, onClick }: SubjectCardProps) {
 export function TimerControls() {
   const status = useTimerStore((s) => s.status)
   const subjects = useSessionStore((s) => s.subjects)
-  const dailyStats = useSessionStore((s) => s.dailyStats)
+  const monthlyStats = useSessionStore((s) => s.monthlyStats)
   const goals = useSessionStore((s) => s.goals)
   const { startSession, pauseSession, resumeSession, finishSession } = useSession()
 
   const now = Math.floor(Date.now() / 1000)
+  const currentDate = new Date()
+  const monthStart = Math.floor(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getTime() / 1000)
+  const monthEnd = Math.floor(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1).getTime() / 1000)
+
   const selectableSubjects = subjects.filter((s) => {
+    if (s.created_at < monthStart || s.created_at >= monthEnd) return false
     if (s.deadline !== null && s.deadline < now) return false
-    const pct = getDailyPct(s.id, dailyStats, goals)
+    const pct = getAllTimePct(s.id, monthlyStats, goals)
     return !isDailyGoalAchieved(pct)
   })
 
@@ -78,11 +83,11 @@ export function TimerControls() {
     }
     if (
       selectedSubjectId !== null &&
-      isDailyGoalAchieved(getDailyPct(selectedSubjectId, dailyStats, goals))
+      isDailyGoalAchieved(getAllTimePct(selectedSubjectId, monthlyStats, goals))
     ) {
       setSelectedSubjectId(selectableSubjects[0]?.id ?? null)
     }
-  }, [subjects, dailyStats, goals])
+  }, [subjects, monthlyStats, goals])
 
   const handleStart = async () => {
     if (!selectedSubjectId) return
@@ -113,7 +118,7 @@ export function TimerControls() {
             <SubjectCard
               key={s.id}
               subject={s}
-              pct={getDailyPct(s.id, dailyStats, goals)}
+              pct={getAllTimePct(s.id, monthlyStats, goals)}
               selected={selectedSubjectId === s.id}
               onClick={() => setSelectedSubjectId(s.id)}
             />

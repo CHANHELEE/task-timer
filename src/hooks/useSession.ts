@@ -6,6 +6,8 @@ export function useSession() {
   const addSubject = useSessionStore((s) => s.addSubject)
   const removeSubject = useSessionStore((s) => s.removeSubject)
   const updateSubjectInStore = useSessionStore((s) => s.updateSubject)
+  const setMonthlyStats = useSessionStore((s) => s.setMonthlyStats)
+
 
   async function startSession(subjectId: number): Promise<void> {
     const startedAt = Math.floor(Date.now() / 1000)
@@ -32,6 +34,9 @@ export function useSession() {
     const endedAt = Math.floor(Date.now() / 1000)
     await window.api.session.finish({ sessionId: timerStore.activeSessionId, endedAt, memo })
     timerStore.stop()
+    const now = new Date()
+    const monthly = await window.api.stats.monthly({ year: now.getFullYear(), month: now.getMonth() + 1 })
+    setMonthlyStats(monthly)
   }
 
   async function createSubject(name: string, color: string, deadline: number | null): Promise<void> {

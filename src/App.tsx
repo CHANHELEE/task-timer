@@ -31,14 +31,11 @@ function getLocalDateString(d: Date): string {
   return `${year}-${month}-${day}`
 }
 
-function getWeekNumber(d: Date): number {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-  const dayNum = date.getUTCDay()
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum)
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
-  return Math.ceil(
-    (((date as unknown as number) - (yearStart as unknown as number)) / 86400000 + 1) / 7
-  )
+function getWeekStartDate(d: Date): string {
+  const date = new Date(d)
+  const day = date.getDay() // 0=일, 1=월, ...
+  date.setDate(date.getDate() - day) // 해당 주 일요일로 이동
+  return getLocalDateString(date)
 }
 
 export default function App() {
@@ -53,8 +50,9 @@ export default function App() {
   const setWeeklyStats = useSessionStore((s) => s.setWeeklyStats)
   const setGoals = useSessionStore((s) => s.setGoals)
   const setWeeklySubjectStats = useSessionStore((s) => s.setWeeklySubjectStats)
+  const setMonthlyStats = useSessionStore((s) => s.setMonthlyStats)
   const subjects = useSessionStore((s) => s.subjects)
-  const dailyStats = useSessionStore((s) => s.dailyStats)
+  const monthlyStats = useSessionStore((s) => s.monthlyStats)
   const goals = useSessionStore((s) => s.goals)
   const elapsed = useTimerStore((s) => s.elapsed)
   const timerStatus = useTimerStore((s) => s.status)
@@ -74,16 +72,21 @@ export default function App() {
   // 앱 시작 시 타이머 탭에 필요한 데이터 로드
   useEffect(() => {
     let mounted = true
-    const dateStr = getLocalDateString(new Date())
+    const now = new Date()
+    const dateStr = getLocalDateString(now)
+    const year = now.getFullYear()
+    const month = now.getMonth() + 1
     Promise.all([
       window.api.subject.list(),
       window.api.stats.daily({ date: dateStr }),
-      window.api.goal.list()
-    ]).then(([subjects, daily, goals]) => {
+      window.api.goal.list(),
+      window.api.stats.monthly({ year, month })
+    ]).then(([subjects, daily, goals, monthly]) => {
       if (!mounted) return
       setSubjects(subjects)
       setDailyStats(daily)
       setGoals(goals)
+      setMonthlyStats(monthly)
       setTimerDataError(null)
       setIsTimerDataReady(true)
     }).catch(() => {
@@ -95,7 +98,7 @@ export default function App() {
     return () => {
       mounted = false
     }
-  }, [setSubjects, setDailyStats, setGoals])
+  }, [setSubjects, setDailyStats, setGoals, setMonthlyStats])
 
   // 통계 탭 진입 시 주간 데이터 추가 로드
   useEffect(() => {
@@ -103,26 +106,29 @@ export default function App() {
     const now = new Date()
     const dateStr = getLocalDateString(now)
     const year = now.getFullYear()
-    const week = getWeekNumber(now)
+    const month = now.getMonth() + 1
+    const weekStart = getWeekStartDate(now)
     Promise.all([
       window.api.stats.daily({ date: dateStr }),
-      window.api.stats.weekly({ year, week }),
-      window.api.stats.weeklyBySubject({ year, week }),
-      window.api.goal.list()
-    ]).then(([daily, weekly, weeklyBySubject, goals]) => {
+      window.api.stats.weekly({ weekStart }),
+      window.api.stats.weeklyBySubject({ weekStart }),
+      window.api.goal.list(),
+      window.api.stats.monthly({ year, month })
+    ]).then(([daily, weekly, weeklyBySubject, goals, monthly]) => {
       setDailyStats(daily)
       setWeeklyStats(weekly)
       setWeeklySubjectStats(weeklyBySubject)
       setGoals(goals)
+      setMonthlyStats(monthly)
     })
-  }, [tab, setDailyStats, setWeeklyStats, setWeeklySubjectStats, setGoals])
+  }, [tab, setDailyStats, setWeeklyStats, setWeeklySubjectStats, setGoals, setMonthlyStats])
 
   if (isCompact) {
-    const prevTotal = dailyStats.find((s) => s.subject_id === subjectId)?.total_seconds ?? 0
-    const todayTotal = prevTotal + elapsed
+    const prevTotal = monthlyStats.find((s) => s.subject_id === subjectId)?.total_seconds ?? 0
+    const totalWithCurrent = prevTotal + elapsed
     const dailyGoal = goals.find((g) => g.subject_id === subjectId)?.daily_seconds ?? null
-    const pct = dailyGoal ? Math.min((todayTotal / dailyGoal) * 100, 100) : null
-    const achieved = dailyGoal !== null && todayTotal >= dailyGoal
+    const pct = dailyGoal ? Math.min((totalWithCurrent / dailyGoal) * 100, 100) : null
+    const achieved = dailyGoal !== null && totalWithCurrent >= dailyGoal
 
     return (
       <div className="compact-widget">

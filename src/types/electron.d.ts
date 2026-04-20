@@ -65,8 +65,9 @@ declare global {
       }
       stats: {
         daily: (payload: { date: string }) => Promise<DailyStat[]>
-        weekly: (payload: { year: number; week: number }) => Promise<WeeklyStat[]>
-        weeklyBySubject: (payload: { year: number; week: number }) => Promise<WeeklySubjectStat[]>
+        weekly: (payload: { weekStart: string }) => Promise<WeeklyStat[]>
+        weeklyBySubject: (payload: { weekStart: string }) => Promise<WeeklySubjectStat[]>
+        monthly: (payload: { year: number; month: number }) => Promise<DailyStat[]>
       }
       subject: {
         list: () => Promise<SubjectRow[]>
