@@ -11,7 +11,6 @@ interface SessionState {
   goals: GoalRow[]
 
   setSubjects: (subjects: SubjectRow[]) => void
-  addSubject: (subject: SubjectRow) => void
   updateSubject: (id: number, name: string, color: string, deadline: number | null) => void
   removeSubject: (id: number) => void
 
@@ -33,7 +32,6 @@ export const useSessionStore = create<SessionState>((set) => ({
   goals: [],
 
   setSubjects: (subjects) => set({ subjects }),
-  addSubject: (subject) => set((s) => ({ subjects: [...s.subjects, subject] })),
   updateSubject: (id, name, color, deadline) =>
     set((s) => ({
       subjects: s.subjects.map((sub) => (sub.id === id ? { ...sub, name, color, deadline } : sub))

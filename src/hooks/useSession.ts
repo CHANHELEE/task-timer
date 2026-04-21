@@ -3,7 +3,7 @@ import { useSessionStore } from '../store/sessionStore'
 
 export function useSession() {
   const timerStore = useTimerStore()
-  const addSubject = useSessionStore((s) => s.addSubject)
+  const setSubjects = useSessionStore((s) => s.setSubjects)
   const removeSubject = useSessionStore((s) => s.removeSubject)
   const updateSubjectInStore = useSessionStore((s) => s.updateSubject)
   const setMonthlyStats = useSessionStore((s) => s.setMonthlyStats)
@@ -40,8 +40,9 @@ export function useSession() {
   }
 
   async function createSubject(name: string, color: string, deadline: number | null): Promise<void> {
-    const id = await window.api.subject.create({ name, color, deadline })
-    addSubject({ id, name, color, deadline, created_at: Math.floor(Date.now() / 1000) })
+    await window.api.subject.create({ name, color, deadline })
+    const subjects = await window.api.subject.list()
+    setSubjects(subjects)
   }
 
   async function deleteSubject(id: number): Promise<void> {
