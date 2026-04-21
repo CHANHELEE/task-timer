@@ -46,7 +46,7 @@
   },
   "build": {
     "appId": "com.chlee.study-timer",
-    "productName": "Study Timer",
+    "productName": "Task Timer",
     "directories": {
       "buildResources": "resources",
       "output": "dist"
