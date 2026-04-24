@@ -12,8 +12,8 @@ export function SessionInfo() {
   const status = useTimerStore((s) => s.status)
   const elapsed = useTimerStore((s) => s.elapsed)
   const subjectId = useTimerStore((s) => s.subjectId)
+  const subjectPrevTotal = useTimerStore((s) => s.subjectPrevTotal)
   const subjects = useSessionStore((s) => s.subjects)
-  const dailyStats = useSessionStore((s) => s.dailyStats)
   const goals = useSessionStore((s) => s.goals)
 
   if (status === 'idle' || subjectId === null) return null
@@ -21,14 +21,13 @@ export function SessionInfo() {
   const subject = subjects.find((s) => s.id === subjectId)
   if (!subject) return null
 
-  const prevTotal = dailyStats.find((s) => s.subject_id === subjectId)?.total_seconds ?? 0
-  const todayTotal = prevTotal + elapsed
+  const total = subjectPrevTotal + elapsed
 
   const goal = goals.find((g) => g.subject_id === subjectId)
-  const dailyGoal = goal?.daily_seconds ?? null
+  const goalSeconds = goal?.daily_seconds ?? null
 
-  const pct = dailyGoal ? Math.min((todayTotal / dailyGoal) * 100, 100) : null
-  const achieved = dailyGoal !== null && todayTotal >= dailyGoal
+  const pct = goalSeconds ? Math.min((total / goalSeconds) * 100, 100) : null
+  const achieved = goalSeconds !== null && total >= goalSeconds
 
   return (
     <div className="session-info">
@@ -40,14 +39,14 @@ export function SessionInfo() {
 
       <div className="session-info-goal">
         <div className="session-info-goal-header">
-          <span className="session-info-goal-label">{dailyGoal !== null ? '오늘 목표' : '오늘 학습'}</span>
+          <span className="session-info-goal-label">{goalSeconds !== null ? '목표' : '누적'}</span>
           <span
             className="session-info-goal-value"
             style={{ color: achieved ? '#4AE27A' : '#ccc' }}
           >
-            {formatDuration(todayTotal)}
-            {dailyGoal !== null && (
-              <span className="session-info-goal-total"> / {formatDuration(dailyGoal)}</span>
+            {formatDuration(total)}
+            {goalSeconds !== null && (
+              <span className="session-info-goal-total"> / {formatDuration(goalSeconds)}</span>
             )}
           </span>
           {pct !== null && (
@@ -59,7 +58,7 @@ export function SessionInfo() {
             </span>
           )}
         </div>
-        {dailyGoal !== null && (
+        {goalSeconds !== null && (
           <div className="session-info-bar-track">
             <div
               className="session-info-bar-fill"

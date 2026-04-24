@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { z } from 'zod'
-import { getDailyStats, getWeeklyStats, getWeeklyStatsBySubject, getMonthlyStats } from '../db/queries/stats'
+import { getDailyStats, getDailyStatForSubject, getSubjectTotal, getWeeklyStats, getWeeklyStatsBySubject, getMonthlyStats } from '../db/queries/stats'
 
 const DailySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -14,6 +14,16 @@ export function registerStatsHandlers(): void {
   ipcMain.handle('stats:daily', (_, payload) => {
     const { date } = DailySchema.parse(payload)
     return getDailyStats(date)
+  })
+
+  ipcMain.handle('stats:subjectTotal', (_, payload) => {
+    const { subjectId } = z.object({ subjectId: z.number().int().positive() }).parse(payload)
+    return getSubjectTotal(subjectId)
+  })
+
+  ipcMain.handle('stats:dailyForSubject', (_, payload) => {
+    const { date, subjectId } = DailySchema.extend({ subjectId: z.number().int().positive() }).parse(payload)
+    return getDailyStatForSubject(date, subjectId)
   })
 
   ipcMain.handle('stats:weekly', (_, payload) => {

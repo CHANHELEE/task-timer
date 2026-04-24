@@ -16,6 +16,7 @@ interface SessionState {
 
   setSessions: (sessions: SessionRow[]) => void
   setDailyStats: (stats: DailyStat[]) => void
+  updateDailyStat: (stat: DailyStat) => void
   setWeeklyStats: (stats: WeeklyStat[]) => void
   setWeeklySubjectStats: (stats: WeeklySubjectStat[]) => void
   setMonthlyStats: (stats: DailyStat[]) => void
@@ -41,6 +42,15 @@ export const useSessionStore = create<SessionState>((set) => ({
 
   setSessions: (sessions) => set({ sessions }),
   setDailyStats: (dailyStats) => set({ dailyStats }),
+  updateDailyStat: (stat) =>
+    set((s) => {
+      const exists = s.dailyStats.some((d) => d.subject_id === stat.subject_id)
+      return {
+        dailyStats: exists
+          ? s.dailyStats.map((d) => (d.subject_id === stat.subject_id ? stat : d))
+          : [...s.dailyStats, stat]
+      }
+    }),
   setWeeklyStats: (weeklyStats) => set({ weeklyStats }),
   setWeeklySubjectStats: (weeklySubjectStats) => set({ weeklySubjectStats }),
   setMonthlyStats: (monthlyStats) => set({ monthlyStats }),

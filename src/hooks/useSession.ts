@@ -6,13 +6,17 @@ export function useSession() {
   const setSubjects = useSessionStore((s) => s.setSubjects)
   const removeSubject = useSessionStore((s) => s.removeSubject)
   const updateSubjectInStore = useSessionStore((s) => s.updateSubject)
+  const updateDailyStat = useSessionStore((s) => s.updateDailyStat)
   const setMonthlyStats = useSessionStore((s) => s.setMonthlyStats)
 
 
   async function startSession(subjectId: number): Promise<void> {
     const startedAt = Math.floor(Date.now() / 1000)
-    const sessionId = await window.api.session.create({ subjectId, targetSeconds: null, startedAt })
-    timerStore.start(subjectId, sessionId)
+    const [sessionId, prevTotal] = await Promise.all([
+      window.api.session.create({ subjectId, targetSeconds: null, startedAt }),
+      window.api.stats.subjectTotal({ subjectId })
+    ])
+    timerStore.start(subjectId, sessionId, prevTotal)
   }
 
   async function pauseSession(): Promise<void> {
@@ -33,9 +37,18 @@ export function useSession() {
     if (!timerStore.activeSessionId) return
     const endedAt = Math.floor(Date.now() / 1000)
     await window.api.session.finish({ sessionId: timerStore.activeSessionId, endedAt, memo })
+    const finishedSubjectId = timerStore.subjectId!
     timerStore.stop()
     const now = new Date()
-    const monthly = await window.api.stats.monthly({ year: now.getFullYear(), month: now.getMonth() + 1 })
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+    const [dailyStat, monthly] = await Promise.all([
+      window.api.stats.dailyForSubject({ date: dateStr, subjectId: finishedSubjectId }),
+      window.api.stats.monthly({ year, month: now.getMonth() + 1 })
+    ])
+    if (dailyStat) updateDailyStat(dailyStat)
     setMonthlyStats(monthly)
   }
 

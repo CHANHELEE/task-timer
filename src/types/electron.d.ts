@@ -41,7 +41,6 @@ export interface GoalRow {
   id: number
   subject_id: number | null
   daily_seconds: number | null
-  weekly_seconds: number | null
 }
 
 declare global {
@@ -65,6 +64,8 @@ declare global {
       }
       stats: {
         daily: (payload: { date: string }) => Promise<DailyStat[]>
+        subjectTotal: (payload: { subjectId: number }) => Promise<number>
+        dailyForSubject: (payload: { date: string; subjectId: number }) => Promise<DailyStat | null>
         weekly: (payload: { weekStart: string }) => Promise<WeeklyStat[]>
         weeklyBySubject: (payload: { weekStart: string }) => Promise<WeeklySubjectStat[]>
         monthly: (payload: { year: number; month: number }) => Promise<DailyStat[]>
@@ -80,7 +81,6 @@ declare global {
         upsert: (payload: {
           subjectId: number | null
           dailySeconds: number | null
-          weeklySeconds: number | null
         }) => Promise<void>
       }
       window: {

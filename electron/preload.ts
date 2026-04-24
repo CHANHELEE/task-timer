@@ -16,6 +16,8 @@ const api = {
   },
   stats: {
     daily: (payload: unknown) => ipcRenderer.invoke('stats:daily', payload),
+    subjectTotal: (payload: unknown) => ipcRenderer.invoke('stats:subjectTotal', payload),
+    dailyForSubject: (payload: unknown) => ipcRenderer.invoke('stats:dailyForSubject', payload),
     weekly: (payload: unknown) => ipcRenderer.invoke('stats:weekly', payload),
     weeklyBySubject: (payload: unknown) => ipcRenderer.invoke('stats:weeklyBySubject', payload),
     monthly: (payload: unknown) => ipcRenderer.invoke('stats:monthly', payload)

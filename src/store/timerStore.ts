@@ -7,8 +7,9 @@ interface TimerState {
   elapsed: number
   activeSessionId: number | null
   subjectId: number | null
+  subjectPrevTotal: number
 
-  start: (subjectId: number, sessionId: number) => void
+  start: (subjectId: number, sessionId: number, prevTotal: number) => void
   pause: () => void
   resume: () => void
   tick: () => void
@@ -21,9 +22,10 @@ export const useTimerStore = create<TimerState>((set) => ({
   elapsed: 0,
   activeSessionId: null,
   subjectId: null,
+  subjectPrevTotal: 0,
 
-  start: (subjectId, sessionId) =>
-    set({ status: 'running', elapsed: 0, activeSessionId: sessionId, subjectId }),
+  start: (subjectId, sessionId, prevTotal) =>
+    set({ status: 'running', elapsed: 0, activeSessionId: sessionId, subjectId, subjectPrevTotal: prevTotal }),
 
   pause: () => set({ status: 'paused' }),
 
@@ -31,7 +33,7 @@ export const useTimerStore = create<TimerState>((set) => ({
 
   tick: () => set((s) => ({ elapsed: s.elapsed + 1 })),
 
-  stop: () => set({ status: 'idle', elapsed: 0, activeSessionId: null, subjectId: null }),
+  stop: () => set({ status: 'idle', elapsed: 0, activeSessionId: null, subjectId: null, subjectPrevTotal: 0 }),
 
   setElapsed: (elapsed) => set({ elapsed })
 }))

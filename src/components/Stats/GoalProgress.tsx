@@ -31,17 +31,11 @@ interface GoalRowProps {
   label: string
   color: string
   actual: number
-  goalDaily: number | null
-  goalWeekly: number | null
+  goal: number
 }
 
-function GoalRowItem({ label, color, actual, goalDaily, goalWeekly }: GoalRowProps) {
-  const hasDaily = goalDaily != null && goalDaily > 0
-  const hasWeekly = goalWeekly != null && goalWeekly > 0
-  if (!hasDaily && !hasWeekly) return null
-
-  const goal = hasDaily ? goalDaily! : goalWeekly!
-
+function GoalRowItem({ label, color, actual, goal }: GoalRowProps) {
+  const achieved = actual >= goal
   return (
     <div className="gp-row">
       <div className="gp-label">
@@ -52,11 +46,11 @@ function GoalRowItem({ label, color, actual, goalDaily, goalWeekly }: GoalRowPro
         <div className="gp-bar-group">
           <div className="gp-bar-header">
             <span className="gp-period">이번 달</span>
-            <span className="gp-time" style={{ color: actual >= goal ? '#4AE27A' : '#ccc' }}>
+            <span className="gp-time" style={{ color: achieved ? '#4AE27A' : '#ccc' }}>
               {formatDuration(actual)}
               <span className="gp-goal-time"> / {formatDuration(goal)}</span>
             </span>
-            <span className="gp-pct" style={{ color: actual >= goal ? '#4AE27A' : '#888' }}>
+            <span className="gp-pct" style={{ color: achieved ? '#4AE27A' : '#888' }}>
               {Math.min(Math.floor((actual / goal) * 100), 100)}%
             </span>
           </div>
@@ -72,34 +66,29 @@ export function GoalProgress() {
   const goals = useSessionStore((s) => s.goals)
   const subjects = useSessionStore((s) => s.subjects)
 
-  if (goals.length === 0) return null
-
-  const monthlyTotal = monthlyStats.reduce((acc, s) => acc + s.total_seconds, 0)
-
   const getGoal = (subjectId: number | null): GoalRow | undefined =>
     goals.find((g) => g.subject_id === subjectId)
 
   const overallGoal = getGoal(null)
-  const hasOverallGoal = overallGoal && (overallGoal.daily_seconds || overallGoal.weekly_seconds)
+  const monthlyTotal = monthlyStats.reduce((acc, s) => acc + s.total_seconds, 0)
 
   const subjectsWithGoals = subjects.filter((sub) => {
     const g = getGoal(sub.id)
-    return g && (g.daily_seconds || g.weekly_seconds)
+    return g && g.daily_seconds
   })
 
-  if (!hasOverallGoal && subjectsWithGoals.length === 0) return null
+  if (!overallGoal?.daily_seconds && subjectsWithGoals.length === 0) return null
 
   return (
     <div className="gp-section">
       <h3 className="gp-title">이번달 목표 달성 현황</h3>
 
-      {hasOverallGoal && (
+      {overallGoal?.daily_seconds && (
         <GoalRowItem
           label="전체"
           color="#4A90E2"
           actual={monthlyTotal}
-          goalDaily={overallGoal!.daily_seconds}
-          goalWeekly={overallGoal!.weekly_seconds}
+          goal={overallGoal.daily_seconds}
         />
       )}
 
@@ -112,8 +101,7 @@ export function GoalProgress() {
             label={sub.name}
             color={sub.color}
             actual={stat?.total_seconds ?? 0}
-            goalDaily={g.daily_seconds}
-            goalWeekly={g.weekly_seconds}
+            goal={g.daily_seconds!}
           />
         )
       })}

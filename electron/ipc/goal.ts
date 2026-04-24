@@ -4,8 +4,7 @@ import { listGoals, upsertGoal } from '../db/queries/goal'
 
 const UpsertSchema = z.object({
   subjectId: z.number().int().positive().nullable(),
-  dailySeconds: z.number().int().nonnegative().nullable(),
-  weeklySeconds: z.number().int().nonnegative().nullable()
+  dailySeconds: z.number().int().nonnegative().nullable()
 })
 
 export function registerGoalHandlers(): void {
@@ -14,7 +13,7 @@ export function registerGoalHandlers(): void {
   })
 
   ipcMain.handle('goal:upsert', (_, payload) => {
-    const { subjectId, dailySeconds, weeklySeconds } = UpsertSchema.parse(payload)
-    upsertGoal(subjectId, dailySeconds, weeklySeconds)
+    const { subjectId, dailySeconds } = UpsertSchema.parse(payload)
+    upsertGoal(subjectId, dailySeconds)
   })
 }

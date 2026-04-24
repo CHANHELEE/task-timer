@@ -15,7 +15,7 @@ interface SubjectGoalRowProps {
   name: string
   color: string
   goal: GoalRow | undefined
-  onSave: (subjectId: number, daily: string, weekly: string) => Promise<void>
+  onSave: (subjectId: number, daily: string) => Promise<void>
   saving: boolean
 }
 
@@ -24,17 +24,13 @@ function SubjectGoalRow({ subjectId, name, color, goal, onSave, saving }: Subjec
   const [daily, setDaily] = useState(
     goal?.daily_seconds ? String(Math.floor(goal.daily_seconds / 60)) : ''
   )
-  const [weekly, setWeekly] = useState(
-    goal?.weekly_seconds ? String(Math.floor(goal.weekly_seconds / 60)) : ''
-  )
 
   useEffect(() => {
     setDaily(goal?.daily_seconds ? String(Math.floor(goal.daily_seconds / 60)) : '')
-    setWeekly(goal?.weekly_seconds ? String(Math.floor(goal.weekly_seconds / 60)) : '')
   }, [goal])
 
   const handleSave = async () => {
-    await onSave(subjectId, daily, weekly)
+    await onSave(subjectId, daily)
     setEditing(false)
   }
 
@@ -43,8 +39,7 @@ function SubjectGoalRow({ subjectId, name, color, goal, onSave, saving }: Subjec
       <div className="goal-row-subject" style={{ borderLeft: `4px solid ${color}` }}>
         <span className="goal-row-name">{name}</span>
         <div className="goal-row-values">
-          <span className="goal-tag">일 {formatMinutes(goal?.daily_seconds ?? null)}</span>
-          <span className="goal-tag">주 {formatMinutes(goal?.weekly_seconds ?? null)}</span>
+          <span className="goal-tag">{formatMinutes(goal?.daily_seconds ?? null)}</span>
         </div>
         <button className="goal-edit-btn" onClick={() => setEditing((v) => !v)}>
           {editing ? '닫기' : '편집'}
@@ -54,23 +49,13 @@ function SubjectGoalRow({ subjectId, name, color, goal, onSave, saving }: Subjec
       {editing && (
         <div className="goal-edit-form">
           <label>
-            일별 목표 (분)
+            목표 (분)
             <input
               type="number"
               min={0}
               value={daily}
               placeholder="없음"
               onChange={(e) => setDaily(e.target.value)}
-            />
-          </label>
-          <label>
-            주별 목표 (분)
-            <input
-              type="number"
-              min={0}
-              value={weekly}
-              placeholder="없음"
-              onChange={(e) => setWeekly(e.target.value)}
             />
           </label>
           <div className="goal-edit-actions">
@@ -96,12 +81,11 @@ export function GoalSettings({ daysBack }: { daysBack: number | null }) {
 
   const getGoal = (subjectId: number) => goals.find((g) => g.subject_id === subjectId)
 
-  const handleSave = async (subjectId: number, dailyMinutes: string, weeklyMinutes: string) => {
+  const handleSave = async (subjectId: number, dailyMinutes: string) => {
     setSaving(true)
     await window.api.goal.upsert({
       subjectId,
-      dailySeconds: dailyMinutes ? parseInt(dailyMinutes) * 60 : null,
-      weeklySeconds: weeklyMinutes ? parseInt(weeklyMinutes) * 60 : null
+      dailySeconds: dailyMinutes ? parseInt(dailyMinutes) * 60 : null
     })
     const updated = await window.api.goal.list()
     setGoals(updated)
